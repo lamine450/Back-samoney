@@ -74,21 +74,24 @@ class Users
      */
     private $agence;
 
-    /**
-     * @ORM\OneToMany(targetEntity=Compte::class, mappedBy="users")
-     */
-    private $compte;
 
     /**
-     * @ORM\ManyToMany(targetEntity=Depot::class, inversedBy="users")
+     * @ORM\OneToMany(targetEntity=TypeDeTransaction::class, mappedBy="users")
      */
-    private $depot;
+    private $typeDeTransactions;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Depot::class, mappedBy="users")
+     */
+    private $depots;
 
     public function __construct()
     {
         $this->transaction = new ArrayCollection();
         $this->compte = new ArrayCollection();
         $this->depot = new ArrayCollection();
+        $this->typeDeTransactions = new ArrayCollection();
+        $this->depots = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -247,29 +250,29 @@ class Users
     }
 
     /**
-     * @return Collection|Compte[]
+     * @return Collection|TypeDeTransaction[]
      */
-    public function getCompte(): Collection
+    public function getTypeDeTransactions(): Collection
     {
-        return $this->compte;
+        return $this->typeDeTransactions;
     }
 
-    public function addCompte(Compte $compte): self
+    public function addTypeDeTransaction(TypeDeTransaction $typeDeTransaction): self
     {
-        if (!$this->compte->contains($compte)) {
-            $this->compte[] = $compte;
-            $compte->setUsers($this);
+        if (!$this->typeDeTransactions->contains($typeDeTransaction)) {
+            $this->typeDeTransactions[] = $typeDeTransaction;
+            $typeDeTransaction->setUsers($this);
         }
 
         return $this;
     }
 
-    public function removeCompte(Compte $compte): self
+    public function removeTypeDeTransaction(TypeDeTransaction $typeDeTransaction): self
     {
-        if ($this->compte->removeElement($compte)) {
+        if ($this->typeDeTransactions->removeElement($typeDeTransaction)) {
             // set the owning side to null (unless already changed)
-            if ($compte->getUsers() === $this) {
-                $compte->setUsers(null);
+            if ($typeDeTransaction->getUsers() === $this) {
+                $typeDeTransaction->setUsers(null);
             }
         }
 
@@ -279,15 +282,16 @@ class Users
     /**
      * @return Collection|Depot[]
      */
-    public function getDepot(): Collection
+    public function getDepots(): Collection
     {
-        return $this->depot;
+        return $this->depots;
     }
 
     public function addDepot(Depot $depot): self
     {
-        if (!$this->depot->contains($depot)) {
-            $this->depot[] = $depot;
+        if (!$this->depots->contains($depot)) {
+            $this->depots[] = $depot;
+            $depot->setUsers($this);
         }
 
         return $this;
@@ -295,7 +299,12 @@ class Users
 
     public function removeDepot(Depot $depot): self
     {
-        $this->depot->removeElement($depot);
+        if ($this->depots->removeElement($depot)) {
+            // set the owning side to null (unless already changed)
+            if ($depot->getUsers() === $this) {
+                $depot->setUsers(null);
+            }
+        }
 
         return $this;
     }

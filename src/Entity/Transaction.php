@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\TransactionRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -71,6 +73,27 @@ class Transaction
      * @ORM\ManyToOne(targetEntity=Users::class, inversedBy="transaction")
      */
     private $users;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Compte::class, inversedBy="transactions")
+     */
+    private $compte;
+
+    /**
+     * @ORM\OneToMany(targetEntity=TypeDeTransaction::class, mappedBy="transaction")
+     */
+    private $typeDeTransactions;
+
+    /**
+     * @ORM\OneToMany(targetEntity=TypeTransactionClient::class, mappedBy="transaction")
+     */
+    private $typeTransactionClients;
+
+    public function __construct()
+    {
+        $this->typeDeTransactions = new ArrayCollection();
+        $this->typeTransactionClients = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -205,6 +228,78 @@ class Transaction
     public function setUsers(?Users $users): self
     {
         $this->users = $users;
+
+        return $this;
+    }
+
+    public function getCompte(): ?Compte
+    {
+        return $this->compte;
+    }
+
+    public function setCompte(?Compte $compte): self
+    {
+        $this->compte = $compte;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|TypeDeTransaction[]
+     */
+    public function getTypeDeTransactions(): Collection
+    {
+        return $this->typeDeTransactions;
+    }
+
+    public function addTypeDeTransaction(TypeDeTransaction $typeDeTransaction): self
+    {
+        if (!$this->typeDeTransactions->contains($typeDeTransaction)) {
+            $this->typeDeTransactions[] = $typeDeTransaction;
+            $typeDeTransaction->setTransaction($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTypeDeTransaction(TypeDeTransaction $typeDeTransaction): self
+    {
+        if ($this->typeDeTransactions->removeElement($typeDeTransaction)) {
+            // set the owning side to null (unless already changed)
+            if ($typeDeTransaction->getTransaction() === $this) {
+                $typeDeTransaction->setTransaction(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|TypeTransactionClient[]
+     */
+    public function getTypeTransactionClients(): Collection
+    {
+        return $this->typeTransactionClients;
+    }
+
+    public function addTypeTransactionClient(TypeTransactionClient $typeTransactionClient): self
+    {
+        if (!$this->typeTransactionClients->contains($typeTransactionClient)) {
+            $this->typeTransactionClients[] = $typeTransactionClient;
+            $typeTransactionClient->setTransaction($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTypeTransactionClient(TypeTransactionClient $typeTransactionClient): self
+    {
+        if ($this->typeTransactionClients->removeElement($typeTransactionClient)) {
+            // set the owning side to null (unless already changed)
+            if ($typeTransactionClient->getTransaction() === $this) {
+                $typeTransactionClient->setTransaction(null);
+            }
+        }
 
         return $this;
     }

@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\ClientRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -31,6 +33,16 @@ class Client
      * @ORM\Column(type="integer")
      */
     private $cni;
+
+    /**
+     * @ORM\OneToMany(targetEntity=TypeTransactionClient::class, mappedBy="client")
+     */
+    private $typeTransactionClients;
+
+    public function __construct()
+    {
+        $this->typeTransactionClients = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -69,6 +81,36 @@ class Client
     public function setCni(int $cni): self
     {
         $this->cni = $cni;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|TypeTransactionClient[]
+     */
+    public function getTypeTransactionClients(): Collection
+    {
+        return $this->typeTransactionClients;
+    }
+
+    public function addTypeTransactionClient(TypeTransactionClient $typeTransactionClient): self
+    {
+        if (!$this->typeTransactionClients->contains($typeTransactionClient)) {
+            $this->typeTransactionClients[] = $typeTransactionClient;
+            $typeTransactionClient->setClient($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTypeTransactionClient(TypeTransactionClient $typeTransactionClient): self
+    {
+        if ($this->typeTransactionClients->removeElement($typeTransactionClient)) {
+            // set the owning side to null (unless already changed)
+            if ($typeTransactionClient->getClient() === $this) {
+                $typeTransactionClient->setClient(null);
+            }
+        }
 
         return $this;
     }
