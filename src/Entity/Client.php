@@ -7,6 +7,7 @@ use App\Repository\ClientRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ApiResource()
@@ -18,26 +19,30 @@ class Client
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
+     * @Groups({"depot:white", "trans:whrite"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Groups({"depot:white", "trans:whrite"})
      */
     private $nomComplet;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Groups({"depot:white", "trans:whrite"})
      */
     private $telephone;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Groups({"depot:white", "trans:whrite"})
      */
     private $cni;
 
     /**
-     * @ORM\OneToMany(targetEntity=TypeTransactionClient::class, mappedBy="client")
+     * @ORM\OneToMany(targetEntity=TypeTransactionClient::class, mappedBy="client", cascade = "persist")
      */
     private $typeTransactionClients;
 
