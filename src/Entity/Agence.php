@@ -2,12 +2,31 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiResource;
+use ApiPlatform\Core\Annotation\ApiSubresource;
 use App\Repository\AgenceRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
+ * @ApiResource(
+ *     denormalizationContext = {"groups"={"agence:whrite"}},
+ *     collectionOperations={
+ *          "get",
+ *          "post",
+ *     },
+ *     itemOperations={
+ *          "get",
+ *          "delete"
+ *     },
+ * )
+ * @UniqueEntity(
+ *     "nomAgence",
+ *      message="Ce nom d'agence est deja utiliser dans cette application"
+ * )
  * @ORM\Entity(repositoryClass=AgenceRepository::class)
  */
 class Agence
@@ -16,37 +35,45 @@ class Agence
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
+     * @Groups ({"trans:read"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
+     *  @Groups({"compte:whrite" , "trans:read"})
      */
     private $nomAgence;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Groups({"compte:whrite"})
      */
     private $adressAgence;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="boolean")
+     * @group ({"compte:whrite"})
      */
     private $status;
 
     /**
-     * @ORM\OneToMany(targetEntity=User::class, mappedBy="agence")
+     * @ORM\OneToMany(targetEntity=User::class, mappedBy="agence", cascade="persist")
+     * @ApiSubresource  ()
+     * @Groups ({"compte:whrite"})
      */
     private $users;
 
     /**
      * @ORM\OneToOne(targetEntity=Compte::class, cascade={"persist", "remove"})
+     * @Groups({"compte:whrite"})
      */
     private $compte;
 
     public function __construct()
     {
         $this->users = new ArrayCollection();
+        $this->status = false;
     }
 
     public function getId(): ?int

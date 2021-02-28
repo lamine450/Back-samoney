@@ -2,12 +2,15 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\TransactionRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
+ * @ApiResource()
  * @ORM\Entity(repositoryClass=TransactionRepository::class)
  */
 class Transaction
@@ -16,11 +19,13 @@ class Transaction
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
+     * @Groups({"depot:white"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="integer")
+     * @Groups({"depot:white"})
      */
     private $montant;
 
@@ -30,12 +35,12 @@ class Transaction
     private $dateDepot;
 
     /**
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime, nullable=true")
      */
     private $dateRetrait;
 
     /**
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime, nullable=true")
      */
     private $dateAnnulation;
 

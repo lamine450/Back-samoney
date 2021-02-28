@@ -10,7 +10,6 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
- * @ORM\Entity(repositoryClass=DepotRepository::class)
  * @ApiResource(
  *      denormalizationContext={"groups"={"depot:white"}},
  *      collectionOperations={
@@ -21,6 +20,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
  *          "get",
  *      }
  * )
+ * @ORM\Entity(repositoryClass=DepotRepository::class)
  */
 class Depot
 {

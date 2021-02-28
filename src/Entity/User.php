@@ -12,24 +12,29 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
- * @ORM\Entity(repositoryClass=UserRepository::class)
  * @ApiResource(
  *      collectionOperations={
  *          "get",
+ *          "add_user"={
+ *              "method"="POST",
+ *              "route_name"="add_user",
+ *           },
  *      },
  *      itemOperations={
  *          "get",
  *          "delete"={
- *
+ *          "route_name"="delUser",
  *          },
  *      },
  *      subresourceOperations={
  *          "api_agences_users_get_subresource"={
  *              "method"="GET",
  *              "normalization_context"={"groups"={"user:read"}}
+ *
  *          }
  *     }
  * )
+ * @ORM\Entity(repositoryClass=UserRepository::class)
  */
 class User implements UserInterface
 {
@@ -95,18 +100,15 @@ class User implements UserInterface
 
     /**
      * @ORM\ManyToOne(targetEntity=Profil::class, inversedBy="users",cascade="persist")
+     * @Groups({"read:profil"})
      */
     private $profil;
 
     /**
      * @ORM\ManyToOne(targetEntity=Agence::class, inversedBy="users")
+     * @Groups ({"read:agence"})
      */
     private $agence;
-
-    /**
-     * @ORM\OneToMany(targetEntity=Compte::class, mappedBy="user")
-     */
-    private $compte;
 
     /**
      * @ORM\OneToMany(targetEntity=TypeDeTransaction::class, mappedBy="user")
@@ -115,14 +117,13 @@ class User implements UserInterface
 
     /**
      * @ORM\ManyToMany(targetEntity=Depot::class, mappedBy="user")
-     * @Groups({"user:read"})
      * @ApiSubresource()
      */
     private $depots;
 
     public function __construct()
     {
-        $this->compte = new ArrayCollection();
+
         $this->typeDeTransaction = new ArrayCollection();
         $this->depots = new ArrayCollection();
     }
@@ -307,36 +308,6 @@ class User implements UserInterface
     public function setAgence(?Agence $agence): self
     {
         $this->agence = $agence;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|Compte[]
-     */
-    public function getCompte(): Collection
-    {
-        return $this->compte;
-    }
-
-    public function addCompte(Compte $compte): self
-    {
-        if (!$this->compte->contains($compte)) {
-            $this->compte[] = $compte;
-            $compte->setUser($this);
-        }
-
-        return $this;
-    }
-
-    public function removeCompte(Compte $compte): self
-    {
-        if ($this->compte->removeElement($compte)) {
-            // set the owning side to null (unless already changed)
-            if ($compte->getUser() === $this) {
-                $compte->setUser(null);
-            }
-        }
 
         return $this;
     }
