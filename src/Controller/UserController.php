@@ -15,6 +15,7 @@ use Symfony\Component\Serializer\SerializerInterface;
 class UserController extends AbstractController
 {
     private $manager;
+    private $encoder;
 
     /**
      * @Route("/user", name="user")

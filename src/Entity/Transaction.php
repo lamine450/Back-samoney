@@ -10,7 +10,19 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
- * @ApiResource()
+ * @ApiResource(
+ *     normalizationContext = {"groups"={"trans:read"}},
+ *      denormalizationContext = {"groups"={"trans:whrite", "typeDeTrans:whrite"}},
+ *      collectionOperations={
+ *          "get",
+ *          "post",
+ *      },
+ *      itemOperations={
+ *          "get",
+ *          "put",
+ *          "delete"
+ *      },
+ * )
  * @ORM\Entity(repositoryClass=TransactionRepository::class)
  */
 class Transaction
@@ -19,80 +31,81 @@ class Transaction
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups({"depot:white"})
+     * @Groups({"depot:white" , "trans:whrite"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="integer")
-     * @Groups({"depot:white"})
+     * @Groups({"depot:white", "trans:whrite" })
      */
     private $montant;
 
     /**
      * @ORM\Column(type="datetime")
+     * @Groups({"depot:white", "trans:whrite" })
      */
     private $dateDepot;
 
     /**
-     * @ORM\Column(type="datetime, nullable=true")
+     * @ORM\Column(type="datetime")
+     * @Groups({"trans:whrite" })
      */
     private $dateRetrait;
 
     /**
-     * @ORM\Column(type="datetime, nullable=true")
+     * @ORM\Column(type="datetime")
+     * @Groups({"depot:white", "trans:whrite" })
      */
     private $dateAnnulation;
 
     /**
      * @ORM\Column(type="integer")
+     * @Groups({"trans:whrite" })
      */
     private $ttc;
 
     /**
      * @ORM\Column(type="integer")
+     * @Groups({"trans:read"})
      */
     private $fraisEtat;
 
     /**
      * @ORM\Column(type="integer")
+     * @Groups({"trans:read"})
      */
     private $fraisSysteme;
 
     /**
      * @ORM\Column(type="integer")
+     * @Groups({"trans:read"})
      */
     private $fraisEnvoi;
 
     /**
      * @ORM\Column(type="integer")
+     * @Groups({"trans:read"})
      */
     private $fraisRetrait;
 
     /**
      * @ORM\Column(type="integer")
+     * @Groups({"depot:white", "trans:whrite"})
      */
     private $codeTransaction;
 
     /**
-     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="transaction")
-     */
-    private $user;
-
-    /**
-     * @ORM\OneToMany(targetEntity=TypeTransactionClient::class, mappedBy="transaction")
+     * @ORM\OneToMany(targetEntity=TypeTransactionClient::class, mappedBy="transaction", cascade = "persist")
+     * @Groups({"trans:read", "trans:whrite"})
      */
     private $typeTransactionClients;
 
     /**
-     * @ORM\OneToMany(targetEntity=TypeDeTransaction::class, mappedBy="transaction")
+     * @ORM\OneToMany(targetEntity=TypeDeTransaction::class, mappedBy="transaction", cascade = "persist")
+     * @Groups({"depot:white", "trans:whrite"})
      */
     private $typeDeTransactions;
-
-    /**
-     * @ORM\ManyToOne(targetEntity=Compte::class, inversedBy="transactions")
-     */
-    private $compte;
 
     public function __construct()
     {
@@ -225,18 +238,6 @@ class Transaction
         return $this;
     }
 
-    public function getUser(): ?User
-    {
-        return $this->user;
-    }
-
-    public function setUser(?User $user): self
-    {
-        $this->user = $user;
-
-        return $this;
-    }
-
     /**
      * @return Collection|TypeTransactionClient[]
      */
@@ -293,18 +294,6 @@ class Transaction
                 $typeDeTransaction->setTransaction(null);
             }
         }
-
-        return $this;
-    }
-
-    public function getCompte(): ?Compte
-    {
-        return $this->compte;
-    }
-
-    public function setCompte(?Compte $compte): self
-    {
-        $this->compte = $compte;
 
         return $this;
     }

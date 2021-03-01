@@ -5,9 +5,17 @@ namespace App\Entity;
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\TypeDeTransactionRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
- * @ApiResource
+ * @ApiResource(
+ *     normalizationContext = {"groups"={"typeDeTrans:read"}},
+ *      denormalizationContext = {"groups"={"trans:whrite", "typeDeTrans:whrite"}},
+ *      collectionOperations={
+ *          "get",
+ *          "post",
+ *      },
+ * )
  * @ORM\Entity(repositoryClass=TypeDeTransactionRepository::class)
  */
 class TypeDeTransaction
@@ -25,12 +33,13 @@ class TypeDeTransaction
     private $type;
 
     /**
-     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="typeDeTransaction")
+     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="typeDeTransaction,")
      */
     private $user;
 
     /**
      * @ORM\ManyToOne(targetEntity=Transaction::class, inversedBy="typeDeTransactions")
+     * @Groups({"trans:read"})
      */
     private $transaction;
 
