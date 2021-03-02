@@ -12,15 +12,18 @@ use Symfony\Component\Serializer\Annotation\Groups;
 /**
  * @ApiResource(
  *     normalizationContext = {"groups"={"trans:read"}},
- *      denormalizationContext = {"groups"={"trans:whrite", "typeDeTrans:whrite"}},
+ *      denormalizationContext = {"groups"={"trans:whrite"}},
  *      collectionOperations={
  *          "get",
- *          "post",
+ *          "post":{"route_name":"faire_transaction"},
  *      },
  *      itemOperations={
  *          "get",
  *          "put",
- *          "delete"
+ *          "retrait":{
+ *              "route_name":"faire_retrait",
+ *              "path":"/retrait/{id}"
+ *  }
  *      },
  * )
  * @ORM\Entity(repositoryClass=TransactionRepository::class)
@@ -31,31 +34,28 @@ class Transaction
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups({"depot:white" , "trans:whrite"})
+     * @Groups({"depot:white", "trans:whrite"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="integer")
-     * @Groups({"depot:white", "trans:whrite" })
+     * @Groups({"depot:white", "trans:whrite", "tr:read"})
      */
     private $montant;
 
     /**
-     * @ORM\Column(type="datetime")
-     * @Groups({"depot:white", "trans:whrite" })
+     * @ORM\Column(type="date")
      */
     private $dateDepot;
 
     /**
-     * @ORM\Column(type="datetime")
-     * @Groups({"trans:whrite" })
+     * @ORM\Column(type="date")
      */
     private $dateRetrait;
 
     /**
-     * @ORM\Column(type="datetime")
-     * @Groups({"depot:white", "trans:whrite" })
+     * @ORM\Column(type="date")
      */
     private $dateAnnulation;
 
