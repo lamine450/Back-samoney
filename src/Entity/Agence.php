@@ -2,32 +2,32 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiResource;
-use ApiPlatform\Core\Annotation\ApiSubresource;
 use App\Repository\AgenceRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use ApiPlatform\Core\Annotation\ApiResource;
+use ApiPlatform\Core\Annotation\ApiSubresource;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
+ * @ORM\Entity(repositoryClass=AgenceRepository::class)
  * @ApiResource(
- *     denormalizationContext = {"groups"={"agence:whrite"}},
- *     collectionOperations={
+ *      denormalizationContext = {"groups"={"compte:whrite"}},
+ *      collectionOperations={
  *          "get",
  *          "post",
- *     },
- *     itemOperations={
+ *      },
+ *      itemOperations={
  *          "get",
  *          "delete"
- *     },
+ *      },
  * )
  * @UniqueEntity(
- *     "nomAgence",
- *      message="Ce nom d'agence est deja utiliser dans cette application"
+ *      "nom",
+ *      message="Ce nom d'agence est deja utiliser dans cette apllication"
  * )
- * @ORM\Entity(repositoryClass=AgenceRepository::class)
  */
 class Agence
 {
@@ -35,34 +35,28 @@ class Agence
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups ({"trans:read"})
+     * @Groups({"trans:read"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
-     *  @Groups({"compte:whrite" , "trans:read"})
+     * @Groups({"trans:read", "compte:whrite"})
      */
-    private $nomAgence;
+    private $nom;
 
     /**
      * @ORM\Column(type="string", length=255)
      * @Groups({"compte:whrite"})
      */
-    private $adressAgence;
+    private $adress;
 
     /**
-     * @ORM\Column(type="boolean")
-     * @group ({"compte:whrite"})
+     * @ORM\OneToMany(targetEntity=User::class, mappedBy="agence", cascade = "persist")
+     * @ApiSubresource()
+     * @Groups({"compte:whrite"})
      */
-    private $status;
-
-    /**
-     * @ORM\OneToMany(targetEntity=User::class, mappedBy="agence", cascade="persist")
-     * @ApiSubresource  ()
-     * @Groups ({"compte:whrite"})
-     */
-    private $users;
+    private $user;
 
     /**
      * @ORM\OneToOne(targetEntity=Compte::class, cascade={"persist", "remove"})
@@ -70,10 +64,14 @@ class Agence
      */
     private $compte;
 
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $blocage = false;
+
     public function __construct()
     {
-        $this->users = new ArrayCollection();
-        $this->status = false;
+        $this->user = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -81,38 +79,26 @@ class Agence
         return $this->id;
     }
 
-    public function getNomAgence(): ?string
+    public function getNom(): ?string
     {
-        return $this->nomAgence;
+        return $this->nom;
     }
 
-    public function setNomAgence(string $nomAgence): self
+    public function setNom(string $nom): self
     {
-        $this->nomAgence = $nomAgence;
+        $this->nom = $nom;
 
         return $this;
     }
 
-    public function getAdressAgence(): ?string
+    public function getAdress(): ?string
     {
-        return $this->adressAgence;
+        return $this->adress;
     }
 
-    public function setAdressAgence(string $adressAgence): self
+    public function setAdress(string $adress): self
     {
-        $this->adressAgence = $adressAgence;
-
-        return $this;
-    }
-
-    public function getStatus(): ?string
-    {
-        return $this->status;
-    }
-
-    public function setStatus(string $status): self
-    {
-        $this->status = $status;
+        $this->adress = $adress;
 
         return $this;
     }
@@ -120,15 +106,15 @@ class Agence
     /**
      * @return Collection|User[]
      */
-    public function getUsers(): Collection
+    public function getUser(): Collection
     {
-        return $this->users;
+        return $this->user;
     }
 
     public function addUser(User $user): self
     {
-        if (!$this->users->contains($user)) {
-            $this->users[] = $user;
+        if (!$this->user->contains($user)) {
+            $this->user[] = $user;
             $user->setAgence($this);
         }
 
@@ -137,7 +123,7 @@ class Agence
 
     public function removeUser(User $user): self
     {
-        if ($this->users->removeElement($user)) {
+        if ($this->user->removeElement($user)) {
             // set the owning side to null (unless already changed)
             if ($user->getAgence() === $this) {
                 $user->setAgence(null);
@@ -155,6 +141,18 @@ class Agence
     public function setCompte(?Compte $compte): self
     {
         $this->compte = $compte;
+
+        return $this;
+    }
+
+    public function getBlocage(): ?bool
+    {
+        return $this->blocage;
+    }
+
+    public function setBlocage(bool $blocage): self
+    {
+        $this->blocage = $blocage;
 
         return $this;
     }

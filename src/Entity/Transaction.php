@@ -2,16 +2,17 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\TransactionRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use ApiPlatform\Core\Annotation\ApiResource;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
+ * @ORM\Entity(repositoryClass="App\Repository\TransactionRepository", repositoryClass=TransactionRepository::class)
  * @ApiResource(
- *     normalizationContext = {"groups"={"trans:read"}},
+ *      normalizationContext = {"groups"={"trans:read"}},
  *      denormalizationContext = {"groups"={"trans:whrite"}},
  *      collectionOperations={
  *          "get",
@@ -23,10 +24,9 @@ use Symfony\Component\Serializer\Annotation\Groups;
  *          "retrait":{
  *              "route_name":"faire_retrait",
  *              "path":"/retrait/{id}"
- *  }
+ *          }
  *      },
  * )
- * @ORM\Entity(repositoryClass=TransactionRepository::class)
  */
 class Transaction
 {
@@ -45,25 +45,25 @@ class Transaction
     private $montant;
 
     /**
-     * @ORM\Column(type="date")
+     * @ORM\Column(type="date", nullable=true)
      */
     private $dateDepot;
 
     /**
-     * @ORM\Column(type="date")
+     * @ORM\Column(type="date", nullable=true)
      */
     private $dateRetrait;
 
     /**
-     * @ORM\Column(type="date")
+     * @ORM\Column(type="date", nullable=true)
      */
     private $dateAnnulation;
 
     /**
      * @ORM\Column(type="integer")
-     * @Groups({"trans:whrite" })
+     *
      */
-    private $ttc;
+    private $TTC;
 
     /**
      * @ORM\Column(type="integer")
@@ -73,45 +73,51 @@ class Transaction
 
     /**
      * @ORM\Column(type="integer")
-     * @Groups({"trans:read"})
      */
-    private $fraisSysteme;
+    private $fraisSystem;
 
     /**
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="integer", nullable=true)
      * @Groups({"trans:read"})
      */
-    private $fraisEnvoi;
+    private $fraisEvoie;
 
     /**
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="integer", nullable=true)
      * @Groups({"trans:read"})
      */
     private $fraisRetrait;
 
     /**
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="string", length=255)
      * @Groups({"depot:white", "trans:whrite"})
      */
     private $codeTransaction;
 
     /**
-     * @ORM\OneToMany(targetEntity=TypeTransactionClient::class, mappedBy="transaction", cascade = "persist")
+     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="transaction")
      * @Groups({"trans:read", "trans:whrite"})
      */
-    private $typeTransactionClients;
+    private $user_depot;
 
     /**
-     * @ORM\OneToMany(targetEntity=TypeDeTransaction::class, mappedBy="transaction", cascade = "persist")
-     * @Groups({"depot:white", "trans:whrite"})
+     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="transactions")
+     * @Groups({"trans:read"})
      */
-    private $typeDeTransactions;
+    private $user_retrait;
 
-    public function __construct()
-    {
-        $this->typeTransactionClients = new ArrayCollection();
-        $this->typeDeTransactions = new ArrayCollection();
-    }
+    /**
+     * @ORM\ManyToOne(targetEntity=Client::class, inversedBy="transactions", cascade = "persist")
+     * @Groups({"trans:read"})
+     */
+    private $client_retrait;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Client::class, inversedBy="trans", cascade = "persist")
+     * @Groups({"trans:read"})
+     */
+    private $client_envoie;
+
 
     public function getId(): ?int
     {
@@ -159,21 +165,21 @@ class Transaction
         return $this->dateAnnulation;
     }
 
-    public function setDateAnnulation(\DateTimeInterface $dateAnnulation): self
+    public function setDateAnnulation(?\DateTimeInterface $dateAnnulation): self
     {
         $this->dateAnnulation = $dateAnnulation;
 
         return $this;
     }
 
-    public function getTtc(): ?int
+    public function getTTC(): ?int
     {
-        return $this->ttc;
+        return $this->TTC;
     }
 
-    public function setTtc(int $ttc): self
+    public function setTTC(int $TTC): self
     {
-        $this->ttc = $ttc;
+        $this->TTC = $TTC;
 
         return $this;
     }
@@ -190,26 +196,26 @@ class Transaction
         return $this;
     }
 
-    public function getFraisSysteme(): ?int
+    public function getFraisSystem(): ?int
     {
-        return $this->fraisSysteme;
+        return $this->fraisSystem;
     }
 
-    public function setFraisSysteme(int $fraisSysteme): self
+    public function setFraisSystem(int $fraisSystem): self
     {
-        $this->fraisSysteme = $fraisSysteme;
+        $this->fraisSystem = $fraisSystem;
 
         return $this;
     }
 
-    public function getFraisEnvoi(): ?int
+    public function getFraisEvoie(): ?int
     {
-        return $this->fraisEnvoi;
+        return $this->fraisEvoie;
     }
 
-    public function setFraisEnvoi(int $fraisEnvoi): self
+    public function setFraisEvoie(int $fraisEvoie): self
     {
-        $this->fraisEnvoi = $fraisEnvoi;
+        $this->fraisEvoie = $fraisEvoie;
 
         return $this;
     }
@@ -226,74 +232,62 @@ class Transaction
         return $this;
     }
 
-    public function getCodeTransaction(): ?int
+    public function getCodeTransaction(): ?string
     {
         return $this->codeTransaction;
     }
 
-    public function setCodeTransaction(int $codeTransaction): self
+    public function setCodeTransaction(string $codeTransaction): self
     {
         $this->codeTransaction = $codeTransaction;
 
         return $this;
     }
 
-    /**
-     * @return Collection|TypeTransactionClient[]
-     */
-    public function getTypeTransactionClients(): Collection
+    public function getUserDepot(): ?User
     {
-        return $this->typeTransactionClients;
+        return $this->user_depot;
     }
 
-    public function addTypeTransactionClient(TypeTransactionClient $typeTransactionClient): self
+    public function setUserDepot(?User $user_depot): self
     {
-        if (!$this->typeTransactionClients->contains($typeTransactionClient)) {
-            $this->typeTransactionClients[] = $typeTransactionClient;
-            $typeTransactionClient->setTransaction($this);
-        }
+        $this->user_depot = $user_depot;
 
         return $this;
     }
 
-    public function removeTypeTransactionClient(TypeTransactionClient $typeTransactionClient): self
+    public function getUserRetrait(): ?User
     {
-        if ($this->typeTransactionClients->removeElement($typeTransactionClient)) {
-            // set the owning side to null (unless already changed)
-            if ($typeTransactionClient->getTransaction() === $this) {
-                $typeTransactionClient->setTransaction(null);
-            }
-        }
+        return $this->user_retrait;
+    }
+
+    public function setUserRetrait(?User $user_retrait): self
+    {
+        $this->user_retrait = $user_retrait;
 
         return $this;
     }
 
-    /**
-     * @return Collection|TypeDeTransaction[]
-     */
-    public function getTypeDeTransactions(): Collection
+    public function getClientRetrait(): ?Client
     {
-        return $this->typeDeTransactions;
+        return $this->client_retrait;
     }
 
-    public function addTypeDeTransaction(TypeDeTransaction $typeDeTransaction): self
+    public function setClientRetrait(?Client $client_retrait): self
     {
-        if (!$this->typeDeTransactions->contains($typeDeTransaction)) {
-            $this->typeDeTransactions[] = $typeDeTransaction;
-            $typeDeTransaction->setTransaction($this);
-        }
+        $this->client_retrait = $client_retrait;
 
         return $this;
     }
 
-    public function removeTypeDeTransaction(TypeDeTransaction $typeDeTransaction): self
+    public function getClientEnvoie(): ?Client
     {
-        if ($this->typeDeTransactions->removeElement($typeDeTransaction)) {
-            // set the owning side to null (unless already changed)
-            if ($typeDeTransaction->getTransaction() === $this) {
-                $typeDeTransaction->setTransaction(null);
-            }
-        }
+        return $this->client_envoie;
+    }
+
+    public function setClientEnvoie(?Client $client_envoie): self
+    {
+        $this->client_envoie = $client_envoie;
 
         return $this;
     }

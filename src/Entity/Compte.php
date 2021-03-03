@@ -2,27 +2,26 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\CompteRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use ApiPlatform\Core\Annotation\ApiResource;
 use Symfony\Component\Serializer\Annotation\Groups;
-use Symfony\Component\Validator\Constraints as Assert;
 
 /**
+ * @ORM\Entity(repositoryClass=CompteRepository::class)
  * @ApiResource(
  *      normalizationContext = {"groups"={"compte:read"}},
  *      collectionOperations={
  *          "get",
- *          "post"
- *     },
- *     itemOperations={
+ *          "post",
+ *      },
+ *      itemOperations={
  *          "get",
  *          "delete"
- *     },
- *)
- * @ORM\Entity(repositoryClass=CompteRepository::class)
+ *      },
+ * )
  */
 class Compte
 {
@@ -30,37 +29,36 @@ class Compte
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups({"depot:white","compte:whrite"})
+     * @Groups({"depot:white"})
      */
     private $id;
 
     /**
-     * @ORM\Column(type="integer")
-     *  @Groups({"compte:read", "compte:whrite"})
+     * @ORM\Column(type="string", length=255)
+     * @Groups({"compte:read", "compte:whrite"})
      */
     private $numCompte;
 
     /**
      * @ORM\Column(type="integer")
-     * @Groups({"compte:read","compte:whrite"})
-     * @Assert\Range(
-     *      min = 700000,
-     *      max = 20000000,
-     *      notInRangeMessage = "You must be between {{ min }}cm and {{ max }}cm tall to enter",
-     * )
+     * @Groups({"compte:read"})
      */
-    private $solde;
+    private $solde = 700000;
 
     /**
-     * @ORM\OneToMany(targetEntity=Depot::class, mappedBy="compte", cascade="persist")
-     *  @Groups({"depot:white"})
+     * @ORM\OneToMany(targetEntity=Depot::class, mappedBy="compte", cascade = "persist")
+     * @Groups({"compte:whrite"})
      */
     private $depots;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $blocage = false;
 
     public function __construct()
     {
         $this->depots = new ArrayCollection();
-        $this->numCompte = substr(md5(time()), 0, 10);
     }
 
     public function getId(): ?int
@@ -68,12 +66,12 @@ class Compte
         return $this->id;
     }
 
-    public function getNumCompte(): ?int
+    public function getNumCompte(): ?string
     {
         return $this->numCompte;
     }
 
-    public function setNumCompte(int $numCompte): self
+    public function setNumCompte(string $numCompte): self
     {
         $this->numCompte = $numCompte;
 
@@ -121,4 +119,17 @@ class Compte
 
         return $this;
     }
+
+    public function getBlocage(): ?bool
+    {
+        return $this->blocage;
+    }
+
+    public function setBlocage(bool $blocage): self
+    {
+        $this->blocage = $blocage;
+
+        return $this;
+    }
+
 }

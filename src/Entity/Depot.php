@@ -2,13 +2,15 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\DepotRepository;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use ApiPlatform\Core\Annotation\ApiResource;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
+ * @ORM\Entity(repositoryClass=DepotRepository::class)
  * @ApiResource(
  *      denormalizationContext={"groups"={"depot:white"}},
  *      collectionOperations={
@@ -19,7 +21,6 @@ use Symfony\Component\Serializer\Annotation\Groups;
  *          "get",
  *      }
  * )
- * @ORM\Entity(repositoryClass=DepotRepository::class)
  */
 class Depot
 {
@@ -31,7 +32,7 @@ class Depot
     private $id;
 
     /**
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="date")
      * @Groups({"depot:white"})
      */
     private $dateDepot;
@@ -40,24 +41,25 @@ class Depot
      * @ORM\Column(type="integer")
      * @Groups({"depot:white"})
      */
-    private $montantDepot;
+    private $montant;
 
     /**
-     * @ORM\ManyToMany(targetEntity=User::class, inversedBy="depots", cascade="persist")
-     * @Groups({"depot:white"})
+     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="depots", cascade = "persist")
+     * @Groups({"depot:white", "compte:whrite"})
      */
     private $user;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Compte::class, inversedBy="depots", cascade="persist")
+     * @ORM\ManyToOne(targetEntity=Compte::class, inversedBy="depots", cascade = "persist")
      * @Groups({"depot:white"})
      */
     private $compte;
 
     public function __construct(){
-        $this->dateDepot = new \dateTime();
-        $this->montantDepot=700000;
+        $this->dateDepot = new \DateTime();
+        $this->montant = 700000;
     }
+
 
     public function getId(): ?int
     {
@@ -76,33 +78,26 @@ class Depot
         return $this;
     }
 
-    public function setMontantDepot(int $montantDepot): self
+    public function getMontant(): ?int
     {
-        $this->montantDepot = $montantDepot;
+        return $this->montant;
+    }
+
+    public function setMontant(int $montant): self
+    {
+        $this->montant = $montant;
 
         return $this;
     }
 
-    /**
-     * @return Collection|User[]
-     */
-    public function getUser(): Collection
+    public function getUser(): ?User
     {
         return $this->user;
     }
 
-    public function addUser(User $user): self
+    public function setUser(?User $user): self
     {
-        if (!$this->user->contains($user)) {
-            $this->user[] = $user;
-        }
-
-        return $this;
-    }
-
-    public function removeUser(User $user): self
-    {
-        $this->user->removeElement($user);
+        $this->user = $user;
 
         return $this;
     }
@@ -118,4 +113,5 @@ class Depot
 
         return $this;
     }
+
 }

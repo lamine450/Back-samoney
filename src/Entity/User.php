@@ -2,39 +2,43 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiResource;
-use ApiPlatform\Core\Annotation\ApiSubresource;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
+use ApiPlatform\Core\Annotation\ApiResource;
+use ApiPlatform\Core\Annotation\ApiSubresource;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
+ * @ORM\Entity(repositoryClass=UserRepository::class)
  * @ApiResource(
  *      collectionOperations={
  *          "get",
  *          "add_user"={
  *              "method"="POST",
  *              "route_name"="add_user",
- *           },
+ *          },
  *      },
  *      itemOperations={
  *          "get",
  *          "delete"={
- *          "route_name"="delUser",
+ *              "route_name"="delUser",
  *          },
  *      },
  *      subresourceOperations={
  *          "api_agences_users_get_subresource"={
  *              "method"="GET",
  *              "normalization_context"={"groups"={"user:read"}}
- *
  *          }
  *     }
  * )
- * @ORM\Entity(repositoryClass=UserRepository::class)
+ * @UniqueEntity(
+ *      "phone",
+ *      message="Ce numero de telephone est deja utiliser dans cette apllication"
+ * )
  */
 class User implements UserInterface
 {
@@ -42,15 +46,9 @@ class User implements UserInterface
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups({"depot:white"})
+     * @Groups({"depot:white", "compte:whrite", "trans:whrite", "user:read"})
      */
     private $id;
-
-    /**
-     * @ORM\Column(type="string", length=180, unique=true)
-     * @Groups({"user:read"})
-     */
-    private $username;
 
     /**
      * @ORM\Column(type="json")
@@ -60,72 +58,94 @@ class User implements UserInterface
     /**
      * @var string The hashed password
      * @ORM\Column(type="string")
+     * @Groups({"compte:whrite"})
      */
     private $password;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Groups({"compte:whrite"})
      */
-    private $prenom;
+    private $Prenom;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Groups({"compte:whrite"})
      */
-    private $nom;
+    private $Nom;
+
+    /**
+     * @ORM\Column(type="string", length=255, unique=true)
+     * @Groups({"compte:whrite"})
+     */
+    private $phone;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Groups({"compte:whrite"})
      */
-    private $telephone;
+    private $CNI;
+
+    /**
+     * @ORM\Column(type="blob", nullable=true)
+     */
+    private $Avatar;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Groups({"compte:whrite"})
      */
-    private $cni;
-
-    /**
-     * @ORM\Column(type="blob",nullable=true)
-     */
-    private $avatar;
-
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $adress;
+    private $Adresse;
 
     /**
      * @ORM\Column(type="boolean")
      */
-    private $archivage=false;
+    private $blocage = false;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Profil::class, inversedBy="users",cascade="persist")
-     * @Groups({"read:profil"})
+     * @ORM\ManyToOne(targetEntity=Profil::class, inversedBy="users", cascade = "persist")
+     * @Groups({"compte:whrite"})
      */
     private $profil;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Agence::class, inversedBy="users")
-     * @Groups ({"read:agence"})
-     */
-    private $agence;
-
-    /**
-     * @ORM\OneToMany(targetEntity=TypeDeTransaction::class, mappedBy="user")
-     */
-    private $typeDeTransaction;
-
-    /**
-     * @ORM\ManyToMany(targetEntity=Depot::class, mappedBy="user")
+     * @ORM\OneToMany(targetEntity=Depot::class, mappedBy="user")
      * @ApiSubresource()
      */
     private $depots;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=Agence::class, inversedBy="user", cascade = "persist")
+     * @Groups({"trans:read"})
+     */
+    private $agence;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Transaction::class, mappedBy="user_depot")
+     * @Groups({"user:read"})
+     * @ApiSubresource()
+     */
+    private $transactions;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Transaction::class, mappedBy="user_depot")
+     * @Groups({"user:read"})
+     * @ApiSubresource()
+     */
+    private $transaction;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $username;
+
+
+
     public function __construct()
     {
-
-        $this->typeDeTransaction = new ArrayCollection();
         $this->depots = new ArrayCollection();
+        $this->typeTransactionAgences = new ArrayCollection();
+        $this->transactions = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -140,14 +160,7 @@ class User implements UserInterface
      */
     public function getUsername(): string
     {
-        return (string) $this->username;
-    }
-
-    public function setUsername(string $username): self
-    {
-        $this->username = $username;
-
-        return $this;
+        return (string) $this->phone;
     }
 
     /**
@@ -157,7 +170,7 @@ class User implements UserInterface
     {
         $roles = $this->roles;
         // guarantee every user at least has ROLE_USER
-        $roles[] = 'ROLE_'.$this->profil->getlibelle();
+        $roles[] = 'ROLE_'.$this->profil->getLibelle();
 
         return array_unique($roles);
     }
@@ -206,84 +219,84 @@ class User implements UserInterface
 
     public function getPrenom(): ?string
     {
-        return $this->prenom;
+        return $this->Prenom;
     }
 
-    public function setPrenom(string $prenom): self
+    public function setPrenom(string $Prenom): self
     {
-        $this->prenom = $prenom;
+        $this->Prenom = $Prenom;
 
         return $this;
     }
 
     public function getNom(): ?string
     {
-        return $this->nom;
+        return $this->Nom;
     }
 
-    public function setNom(string $nom): self
+    public function setNom(string $Nom): self
     {
-        $this->nom = $nom;
+        $this->Nom = $Nom;
 
         return $this;
     }
 
-    public function getTelephone(): ?string
+    public function getPhone(): ?string
     {
-        return $this->telephone;
+        return $this->phone;
     }
 
-    public function setTelephone(string $telephone): self
+    public function setPhone(string $phone): self
     {
-        $this->telephone = $telephone;
+        $this->phone = $phone;
 
         return $this;
     }
 
-    public function getCni(): ?string
+    public function getCNI(): ?string
     {
-        return $this->cni;
+        return $this->CNI;
     }
 
-    public function setCni(string $cni): self
+    public function setCNI(string $CNI): self
     {
-        $this->cni = $cni;
+        $this->CNI = $CNI;
 
         return $this;
     }
 
     public function getAvatar()
     {
-        return $this->avatar;
+        return $this->Avatar;
     }
 
-    public function setAvatar($avatar): self
+    public function setAvatar($Avatar): self
     {
-        $this->avatar = $avatar;
+        $this->Avatar = $Avatar;
 
         return $this;
     }
 
-    public function getAdress(): ?string
+    public function getAdresse(): ?string
     {
-        return $this->adress;
+        return $this->Adresse;
     }
 
-    public function setAdress(string $adress): self
+    public function setAdresse(string $Adresse): self
     {
-        $this->adress = $adress;
+        $this->Adresse = $Adresse;
 
         return $this;
     }
 
-    public function getArchivage(): ?bool
+    public function getBlocage(): ?bool
     {
-        return $this->archivage;
+        return $this->blocage;
     }
 
-    public function setArchivage(bool $archivage): self
+    public function setBlocage(bool $blocage): self
     {
-        $this->archivage = $archivage;
+        $this->blocage = $blocage;
 
         return $this;
     }
@@ -296,6 +309,36 @@ class User implements UserInterface
     public function setProfil(?Profil $profil): self
     {
         $this->profil = $profil;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Depot[]
+     */
+    public function getDepots(): Collection
+    {
+        return $this->depots;
+    }
+
+    public function addDepot(Depot $depot): self
+    {
+        if (!$this->depots->contains($depot)) {
+            $this->depots[] = $depot;
+            $depot->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDepot(Depot $depot): self
+    {
+        if ($this->depots->removeElement($depot)) {
+            // set the owning side to null (unless already changed)
+            if ($depot->getUser() === $this) {
+                $depot->setUser(null);
+            }
+        }
 
         return $this;
     }
@@ -313,29 +356,29 @@ class User implements UserInterface
     }
 
     /**
-     * @return Collection|TypeDeTransaction[]
+     * @return Collection|Transaction[]
      */
-    public function getTypeDeTransaction(): Collection
+    public function getTransactions(): Collection
     {
-        return $this->typeDeTransaction;
+        return $this->transactions;
     }
 
-    public function addTypeDeTransaction(TypeDeTransaction $typeDeTransaction): self
+    public function addTransaction(Transaction $transaction): self
     {
-        if (!$this->typeDeTransaction->contains($typeDeTransaction)) {
-            $this->typeDeTransaction[] = $typeDeTransaction;
-            $typeDeTransaction->setUser($this);
+        if (!$this->transactions->contains($transaction)) {
+            $this->transactions[] = $transaction;
+            $transaction->setUserDepot($this);
         }
 
         return $this;
     }
 
-    public function removeTypeDeTransaction(TypeDeTransaction $typeDeTransaction): self
+    public function removeTransaction(Transaction $transaction): self
     {
-        if ($this->typeDeTransaction->removeElement($typeDeTransaction)) {
+        if ($this->transactions->removeElement($transaction)) {
             // set the owning side to null (unless already changed)
-            if ($typeDeTransaction->getUser() === $this) {
-                $typeDeTransaction->setUser(null);
+            if ($transaction->getUserDepot() === $this) {
+                $transaction->setUserDepot(null);
             }
         }
 
@@ -343,28 +386,38 @@ class User implements UserInterface
     }
 
     /**
-     * @return Collection|Depot[]
+     * @return Collection|Transaction[]
      */
-    public function getDepots(): Collection
+    public function getTransaction(): Collection
     {
-        return $this->depots;
+        return $this->transaction;
     }
 
-    public function addDepot(Depot $depot): self
+    public function addTransactions(Transaction $transaction): self
     {
-        if (!$this->depots->contains($depot)) {
-            $this->depots[] = $depot;
-            $depot->addUser($this);
+        if (!$this->transaction->contains($transaction)) {
+            $this->transaction[] = $transaction;
+            $transaction->setUserRetrait($this);
         }
 
         return $this;
     }
 
-    public function removeDepot(Depot $depot): self
+    public function removeTransactions(Transaction $transaction): self
     {
-        if ($this->depots->removeElement($depot)) {
-            $depot->removeUser($this);
+        if ($this->transaction->removeElement($transaction)) {
+            // set the owning side to null (unless already changed)
+            if ($transaction->getUserRetrait() === $this) {
+                $transaction->setUserRetrait(null);
+            }
         }
+
+        return $this;
+    }
+
+    public function setUsername(string $username): self
+    {
+        $this->username = $username;
 
         return $this;
     }
